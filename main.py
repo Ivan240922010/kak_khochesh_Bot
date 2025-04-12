@@ -1,16 +1,48 @@
-
 import random
 import time
 import telebot
+import os
+import requests
 from config import token
 from botlogic import gen_pass
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 bot = telebot.TeleBot(token)
-    
+
 # Обработчик команды '/start' и '/hello'
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
     bot.reply_to(message, f'Привет! Я бот {bot.get_me().first_name}!',reply_markup=keyboard())
+    
+@bot.message_handler(commands=['mem'])
+def send_mem(message):
+    image_name = random.choice(os.listdir('images'))
+    with open(f'images/{image_name}', 'rb') as f:  
+        bot.send_photo(message.chat.id, f)  
+
+def get_duck_image_url():    
+    url = 'https://random-d.uk/api/random'
+    res = requests.get(url)
+    data = res.json()
+    return data['url']
+    
+    
+@bot.message_handler(commands=['duck'])
+def duck(message):
+    '''По команде duck вызывает функцию get_duck_image_url и отправляет URL изображения утки'''
+    image_url = get_duck_image_url()
+    bot.reply_to(message, image_url)
+    
+def get_fox_image_url():    
+        url = 'https://randomfox.ca/floof/'
+        res = requests.get(url)
+        data = res.json()
+        return data['url']
+    
+    
+@bot.message_handler(commands=['fox'])
+def fox(message):
+    image_url = get_fox_image_url()
+    bot.reply_to(message, image_url)
 
 keys = ["1","2","3","4","5","6","7","8","9","0","q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]
 symbols = ["1","2","3","4","5","6","7","8","9","0","!","@","#","$","%","^","&","*","(",")","\'","\"","/","\\",",",".",";",":"]
@@ -46,10 +78,6 @@ def keyboard(key_type="Normal"):
         markup.add(*row)
         markup.add(KeyboardButton("Normal"),KeyboardButton("Symbols"),KeyboardButton("🔙Delete"),KeyboardButton("✅Done"))
     return markup
-
-@bot.message_handler(commands=["start"])
-def start_message(message):
-    bot.send_message(message.chat.id,"You can use the keyboard")
 
 @bot.message_handler(func=lambda message:True)
 def all_messages(message):
